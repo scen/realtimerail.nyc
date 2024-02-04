@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import "./StopPage.css";
 
@@ -20,6 +20,16 @@ export type StopPageProps = {
 };
 
 function StopPage(props: StopPageProps) {
+  const [_, setTime] = useState(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setTime(Date.now()), 1000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+
   const stopData = useHttpData(stopURL(props.stopId), 5000, Stop.fromJSON);
   const transfersData = useHttpData(
     transfersURL(stopData.response),
@@ -27,6 +37,7 @@ function StopPage(props: StopPageProps) {
     ListStopsReply.fromJSON,
   );
 
+  console.log(stopData.error);
   let error = stopData.error ?? transfersData.error;
   if (error !== null) {
     return (
@@ -44,11 +55,27 @@ function StopPage(props: StopPageProps) {
     );
   }
 
+  let lastUpdate = "waiting for initial update";
+  let stale = true;
+  if (stopData.time) {
+    const lastUpdated = stopData.time;
+    const now = Date.now ();
+    let secsAgo = Math.round((now - lastUpdated) / 1000);
+    stale = secsAgo > (1 * 60);
+    lastUpdate = stale ? ">1m" : (secsAgo + "s");
+    let date = new Date(lastUpdated);
+    let prettyDate = date.toLocaleTimeString() + " on " + date.toLocaleDateString();
+    lastUpdate = "updated " + lastUpdate + " ago at " + prettyDate;
+  }
+
   let loaded = stopData.response !== null && transfersData.response !== null;
 
   let stopName = stopData.response?.name ?? props.stopName;
   return (
     <div className="StopPage" key={props.stopId}>
+      <div className={"LastUpdated" + (stale ? " Stale" : "")}>
+        <a>{lastUpdate}</a>
+      </div>
       <h1>
         {stopName}
         <FavoriteButton stopId={props.stopId} />
@@ -269,7 +296,7 @@ function TripStopTime(props: TripStopTimeProps) {
     const minutes = Math.floor(props.time / 60);
     const seconds = props.time % 60;
     const padSeconds = seconds < 10;
-    displayTime = `${minutes}:${padSeconds ? "0" : ""}${seconds}`;
+    displayTime = `${minutes}m ${padSeconds ? "0" : ""}${seconds}s`;
   }
 
   return (

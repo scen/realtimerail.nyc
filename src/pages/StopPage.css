@@ -11,6 +11,16 @@
   margin: 15px 0 20px 0;
 }
 
+.StopPage .LastUpdated {
+  color: dimgray;
+  font-size: 0.7em;
+  text-align: center;
+}
+
+.StopPage .Stale {
+  background-color: #f66;
+}
+
 .StopPage .TripStopTime {
   padding: 8px 5px;
   display: flex;

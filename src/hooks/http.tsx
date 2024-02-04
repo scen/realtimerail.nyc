@@ -14,6 +14,7 @@ import axios from "axios";
 export type HttpData<T> = {
   response: T | null;
   error: string | null;
+  time: number | null;
   poll: () => void;
 };
 
@@ -37,6 +38,7 @@ export function useHttpData<T>(
   const [data, setData] = useState<HttpResponse<T>>({
     response: null,
     error: null,
+    time: null,
   });
   const callback = useCallback((newData: HttpResponse<T>) => {
     setData((prevData) => {
@@ -86,6 +88,7 @@ export function useHttpData<T>(
   return {
     response: data.response,
     error: data.error,
+    time: data.time,
     poll: () => {
       performRequest(url, deserializer, callback);
     },
@@ -95,6 +98,7 @@ export function useHttpData<T>(
 type HttpResponse<T> = {
   response: T | null;
   error: string | null;
+  time: number | null;
 };
 
 async function performRequest<T>(
@@ -111,6 +115,7 @@ async function performRequest<T>(
       callback({
         response: deserializer(response.data),
         error: null,
+        time: Date.now()
       });
     })
     .catch((error) => {
@@ -123,6 +128,7 @@ async function performRequest<T>(
       callback({
         response: null,
         error: message,
+        time: Date.now()
       });
     });
 }
